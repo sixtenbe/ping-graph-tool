@@ -215,9 +215,11 @@ class MyForm(wx.Frame):
                     plot_lim = plot_lim_new
                     self.plot.set_limits(plot_lim)
                 else:
-                    self.plot.update_plot_only([line_limit, line_ping, line_timeout])
+                    self.plot.update_plot_only([line_limit, line_ping,
+                                                line_timeout])
                 #update status texts
-                loss_rate = list(np.isnan(self.ping_ms)).count(True) / float(hist_len)
+                loss_rate = list(np.isnan(self.ping_ms)).count(True)
+                loss_rate /= float(len(self.ping_ms))
                 self.set_packet_loss_status(loss_rate)
                 self.set_ping_avg_status(np.nanmean(self.ping_ms))
                 #explicit wait instead of implicit from the generator
