@@ -41,7 +41,7 @@ class MyForm(wx.Frame):
         self.plot.set_formatter('plain', useOffset = False)
 
         ###stats###
-        self.ping_avg = wx.StaticText(panel, wx.ID_ANY, 'Ping average: x ms')
+        self.ping_avg = wx.StaticText(panel, wx.ID_ANY, 'Ping average: xxx±xx ms')
         self.packet_loss = wx.StaticText(panel, wx.ID_ANY, 'Packet loss: x %')
         
         
@@ -218,10 +218,8 @@ class MyForm(wx.Frame):
                     self.plot.update_plot_only([line_limit, line_ping,
                                                 line_timeout])
                 #update status texts
-                loss_rate = list(np.isnan(self.ping_ms)).count(True)
-                loss_rate /= float(len(self.ping_ms))
-                self.set_packet_loss_status(loss_rate)
-                self.set_ping_avg_status(np.nanmean(self.ping_ms))
+                self.set_packet_loss_status(self.ping_ms)
+                self.set_ping_avg_status(self.ping_ms)
                 #explicit wait instead of implicit from the generator
                 sleep(0.2)
             #cleanup remove the line objects
@@ -229,17 +227,21 @@ class MyForm(wx.Frame):
             #self.plot.sub_plots().axes.lines.remove(line)
 
 
-    def set_ping_avg_status(self, average):
+    def set_ping_avg_status(self, ping_ms):
         """
         Updates the average ping text
         """
-        lbl = 'Ping average: {0:d} ms'.format(int(average))
+        average = np.nanmean(ping_ms)
+        std = np.nanstd(ping_ms)
+        lbl = 'Ping average: {0:d}±{1:.0f} ms'.format(int(average), std)
         self.ping_avg.SetLabel(lbl)
         
-    def set_packet_loss_status(self, loss_rate):
+    def set_packet_loss_status(self, ping_ms):
         """
         Updates the packet loss rate text
         """
+        loss_rate = list(np.isnan(ping_ms)).count(True)
+        loss_rate /= float(len(ping_ms))
         lbl = 'Packet loss: {0:.0f} %'.format(loss_rate * 100)
         self.packet_loss.SetLabel(lbl)
         
