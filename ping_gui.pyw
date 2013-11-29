@@ -233,7 +233,7 @@ class MyForm(wx.Frame):
         """
         average = np.nanmean(ping_ms)
         std = np.nanstd(ping_ms)
-        lbl = 'Ping average: {0:d}±{1:.0f} ms'.format(int(average), std)
+        lbl = 'Ping average: {0:.0f}±{1:.0f} ms'.format(average, std)
         self.ping_avg.SetLabel(lbl)
         
     def set_packet_loss_status(self, ping_ms):
