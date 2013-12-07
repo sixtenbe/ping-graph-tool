@@ -30,7 +30,9 @@ def get_ping_time(ping_string, timeout):
     try:
         ping_time = int(re.search(regex, ping_string).groups()[0])
     except AttributeError:
-        if not re.search('time(d|out)',ping_string) == None:
+        pattern = '(time(d|out)|unreachable)'
+        flags = re.IGNORECASE
+        if not re.search(pattern, ping_string, flags) == None:
             #ping timeout occured set return to Not a number
             #ping_time = timeout
             ping_time = NaN
