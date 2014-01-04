@@ -380,7 +380,9 @@ def nan_line_creator(x_axis, y_axis):
             x_out.append(x_axis[prev_indice])
             #check if the prev_indice value is a nan value
             if np.isnan(y_axis[prev_indice]):
-                y_out.append(y_axis[next_indice])
+                #bug when ping starts with 2 timeouts
+                try: y_out.append(y_axis[next_indice])
+                except IndexError: x_out.pop(-1) #trim lists to equal length
             else:
                 y_out.append(y_axis[prev_indice])
 
