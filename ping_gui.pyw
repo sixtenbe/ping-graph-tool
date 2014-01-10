@@ -44,6 +44,9 @@ class MyForm(wx.Frame):
         self.ping_avg = wx.StaticText(panel, wx.ID_ANY, 'Ping average: xxx±xx ms')
         self.packet_loss = wx.StaticText(panel, wx.ID_ANY, 'Packet loss: x %')
         
+        self.ping_avg_latest = wx.StaticText(panel, wx.ID_ANY, 'Last 10 avg: xxx±xx ms')
+        self.packet_loss_latest = wx.StaticText(panel, wx.ID_ANY, 'Last 10 loss: x %')
+        
         
         ###settings###
         # start stop button
@@ -75,6 +78,7 @@ class MyForm(wx.Frame):
         #------ Layout ------#
         vsizer = wx.BoxSizer(wx.VERTICAL) #main sizer
         hsizer_stats = wx.BoxSizer(wx.HORIZONTAL)
+        hsizer_stats_latest = wx.BoxSizer(wx.HORIZONTAL)
         hsizer_settings = wx.BoxSizer(wx.HORIZONTAL)
         vsizer_host = wx.BoxSizer(wx.VERTICAL)
         vsizer_timeout = wx.BoxSizer(wx.VERTICAL)
@@ -94,11 +98,18 @@ class MyForm(wx.Frame):
         vsizer_history.Add(history_lbl, 0, wx.ALIGN_LEFT)
         vsizer_history.Add(self.history, 0, wx.ALIGN_LEFT)
         
-        #sizer with controls for status information
+        #sizer with status information
         hsizer_stats.Add(self.ping_avg, 0,
                             wx.RIGHT | wx.LEFT | wx.ALIGN_CENTER,
                             10)
         hsizer_stats.Add(self.packet_loss, 0,
+                            wx.RIGHT | wx.LEFT | wx.ALIGN_CENTER,
+                            10)
+        #sizer with latest stats (last 10 pings)
+        hsizer_stats_latest.Add(self.ping_avg_latest, 0,
+                            wx.RIGHT | wx.LEFT | wx.ALIGN_CENTER,
+                            10)
+        hsizer_stats_latest.Add(self.packet_loss_latest, 0,
                             wx.RIGHT | wx.LEFT | wx.ALIGN_CENTER,
                             10)
         
@@ -122,6 +133,7 @@ class MyForm(wx.Frame):
         #main layout
         vsizer.Add(self.plot, 1, wx.EXPAND)
         vsizer.Add(hsizer_stats, 0, wx.ALIGN_CENTER | wx.TOP, 5)
+        vsizer.Add(hsizer_stats_latest, 0, wx.ALIGN_CENTER | wx.BOTTOM, 5)
         vsizer.Add(hsizer_settings, 0, wx.ALIGN_CENTER | wx.TOP, 0)
 
         #finalize
@@ -235,6 +247,12 @@ class MyForm(wx.Frame):
         std = np.nanstd(ping_ms)
         lbl = 'Ping average: {0:.0f}±{1:.0f} ms'.format(average, std)
         self.ping_avg.SetLabel(lbl)
+        #get stats for the last 10 ping packets
+        ping_latest = ping_ms[-10:]
+        average = np.nanmean(ping_latest)
+        std = np.nanstd(ping_latest)
+        lbl = 'Last 10 avg: {0:.0f}±{1:.0f} ms'.format(average, std)
+        self.ping_avg_latest.SetLabel(lbl)
         
     def set_packet_loss_status(self, ping_ms):
         """
@@ -244,6 +262,12 @@ class MyForm(wx.Frame):
         loss_rate /= float(len(ping_ms))
         lbl = 'Packet loss: {0:.0f} %'.format(loss_rate * 100)
         self.packet_loss.SetLabel(lbl)
+        #get stats for the last 10 ping packets
+        ping_latest = ping_ms[-10:]
+        loss_rate = list(np.isnan(ping_latest)).count(True)
+        loss_rate /= float(len(ping_latest))
+        lbl = 'Packet loss: {0:.0f} %'.format(loss_rate * 100)
+        self.packet_loss_latest.SetLabel(lbl)
         
     
     def start_ping(self):
