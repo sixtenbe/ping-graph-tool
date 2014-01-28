@@ -275,10 +275,10 @@ class MyForm(wx.Frame):
         thread = Thread(target=self.ping_it)
         thread.setDaemon(True)
         thread.start()
-        self.start_stop.SetLabel("Stop")
+        self.start_stop.SetLabel("&Stop")
     def stop_ping(self):
         self.stoprequest.set()
-        self.start_stop.SetLabel("Start")
+        self.start_stop.SetLabel("&Start")
 
 
 
