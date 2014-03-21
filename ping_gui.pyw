@@ -188,6 +188,9 @@ class MyForm(wx.Frame):
         #reset the ping data
         self.ping_ms = []   #y-axis
         self.ping_date = [] #x-axis
+        #the data length to use when calling the fill_axis function
+        hist_max = self.history.GetMax()
+        
         with ping(self.host.GetValue(), self.timeout.GetValue()) as pinger:
             x_limit = [-100, 0]
             #intialize the first line
@@ -205,23 +208,28 @@ class MyForm(wx.Frame):
 
             while not self.stoprequest.isSet():
                 ping_ms, ping_date = pinger.next()
-                hist_len = self.history.GetValue()
-                self.ping_ms = fill_axis(self.ping_ms, ping_ms, hist_len)
-                self.ping_date = fill_axis(self.ping_date, ping_date, hist_len)
+                hist_len = int(self.history.GetValue())
+                #trim lists using the maximum length
+                self.ping_ms = fill_axis(self.ping_ms, ping_ms, hist_max)
+                self.ping_date = fill_axis(self.ping_date, ping_date, hist_max)
+                #create truncated lists for temp usage
+                trunc_ping_ms =          self.ping_ms[-hist_len:]
+                trunc_ping_date = self.ping_date[-hist_len:]
+                
                 #convert ping time to relative time from current time
-                was_pinged = get_time_diff(self.ping_date, time())
+                was_pinged = get_time_diff(trunc_ping_date, time())
                
                 #genereate plot limits
                 x_limit = [-hist_len, 0]
-                plot_lim_new = axis_limit(x_limit, self.limit.GetValue(), self.ping_ms)
+                plot_lim_new = axis_limit(x_limit, self.limit.GetValue(), trunc_ping_ms)
 
                 #update the y_limit line
                 y_limit = [self.limit.GetValue()]*2
 
                 #efficient plotting
                 line_limit.set_data(x_limit, y_limit)
-                line_ping.set_data(was_pinged, self.ping_ms)
-                line_timeout.set_data(*nan_line_creator(was_pinged, self.ping_ms))
+                line_ping.set_data(was_pinged, trunc_ping_ms)
+                line_timeout.set_data(*nan_line_creator(was_pinged, trunc_ping_ms))
                 #only redo the plot limits and grid if needed
                 if not plot_lim == plot_lim_new:
                     plot_lim = plot_lim_new
@@ -230,8 +238,8 @@ class MyForm(wx.Frame):
                     self.plot.update_plot_only([line_limit, line_ping,
                                                 line_timeout])
                 #update status texts
-                self.set_packet_loss_status(self.ping_ms)
-                self.set_ping_avg_status(self.ping_ms)
+                self.set_packet_loss_status(trunc_ping_ms)
+                self.set_ping_avg_status(trunc_ping_ms)
                 #explicit wait instead of implicit from the generator
                 sleep(0.2)
             #cleanup remove the line objects
