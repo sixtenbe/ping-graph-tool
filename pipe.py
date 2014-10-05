@@ -17,24 +17,22 @@ sys.excepthook = excepthook
 
 #needs some kind of threading support I think
 
-def get_ping_time(ping_string, timeout):
+def get_ping_time(ping_string):
     """
     Retrieves the time for ping from the stdout string of ping.
     Will set the time to NaN if timeout occured.
 
     Keyword arguments:
     ping_string -- return from the ping program
-    timeout -- the time to timeout in milliseconds (ms)
     """
     regex = '=([\d]+)?ms'
     try:
         ping_time = int(re.search(regex, ping_string).groups()[0])
     except AttributeError:
-        pattern = '(time(d|out)|unreachable)'
+        pattern = '(time(d|out)|unreachable|General failure)'
         flags = re.IGNORECASE
         if not re.search(pattern, ping_string, flags) == None:
             #ping timeout occured set return to Not a number
-            #ping_time = timeout
             ping_time = NaN
         else:
             raise Exception, "faulty ping string: {0!s}".format(ping_string)
@@ -80,7 +78,7 @@ class ping():
                 #end of data stream
                 break
 
-            yield get_ping_time(output, self.timeout)
+            yield get_ping_time(output)
             i+=1
 
         if i == 0:

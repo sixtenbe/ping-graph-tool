@@ -73,7 +73,7 @@ class TestMain(unittest.TestCase):
         result = [1, 4, 6]
         output = ping_gui.list_nan(data)
         #check that the output returns the indices of all the nan elements
-        self.assertIsInstance(output, list, msg='not a list')
+        self.assertIsInstance(output, list, msg='Must return a list')
         self.assertEqual(output, result, 'faulty indices')
 
 
