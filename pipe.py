@@ -25,7 +25,7 @@ def get_ping_time(ping_string):
     Keyword arguments:
     ping_string -- return from the ping program
     """
-    regex = '=([\d]+)?ms'
+    regex = '[<>=]([\d]+)?ms'
     try:
         ping_time = int(re.search(regex, ping_string).groups()[0])
     except AttributeError:
