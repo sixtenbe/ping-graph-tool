@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 # -*- coding: UTF-8 -*-
 import numpy as np
 from numpy import nan
@@ -169,11 +169,15 @@ class TestMain(unittest.TestCase):
 
 
 if __name__ == '__main__' or True:
-    #unittest.main()
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestPing)
-    suite2 = unittest.TestLoader().loadTestsFromTestCase(TestMain)
-    unittest.TextTestRunner(verbosity=2).run(suite2)
-
+    
+    tests_to_run = [TestPing, TestMain]
+    suites_list = []
+    for test_class in tests_to_run:
+        suite = unittest.TestLoader().loadTestsFromTestCase(test_class)
+        suites_list.append(suite)
+    big_suite = unittest.TestSuite(suites_list)
+    unittest.TextTestRunner(verbosity=2).run(big_suite)
+    
     #sleep(3)
 
 

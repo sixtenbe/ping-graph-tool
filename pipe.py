@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 # -*- coding: UTF-8 -*-
 from numpy import NaN
 from os import system
@@ -13,7 +13,7 @@ def excepthook(etype, value, tb):
     message += ''.join(traceback.format_exception(etype, value, tb))
     with open('error.log', 'a') as log:
         log.write(message)
-sys.excepthook = excepthook
+#sys.excepthook = excepthook
 
 #needs some kind of threading support I think
 
@@ -35,7 +35,7 @@ def get_ping_time(ping_string):
             #ping timeout occured set return to Not a number
             ping_time = NaN
         else:
-            raise Exception, "faulty ping string: {0!s}".format(ping_string)
+            raise Exception("faulty ping string: {0!s}".format(ping_string))
 
     return ping_time, time()
 
@@ -82,7 +82,7 @@ class ping():
             i+=1
 
         if i == 0:
-            raise Exception,"cmd failed to run properly: {0!s}".format(output)
+            raise Exception("cmd failed to run properly: {0!s}".format(output))
 
 class ping_native():
     def __init__(self, server, timeout):

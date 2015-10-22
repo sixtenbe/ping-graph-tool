@@ -1,4 +1,4 @@
-#!/usr/bin/python
+ï»¿#!/usr/bin/python2
 # -*- coding: UTF-8 -*-
 import sys
 import traceback
@@ -41,10 +41,10 @@ class MyForm(wx.Frame):
         self.plot.set_formatter('plain', useOffset = False)
 
         ###stats###
-        self.ping_avg = wx.StaticText(panel, wx.ID_ANY, 'Ping average: xxx±xx ms')
+        self.ping_avg = wx.StaticText(panel, wx.ID_ANY, u'Ping average: xxxÂ±xx ms')
         self.packet_loss = wx.StaticText(panel, wx.ID_ANY, 'Packet loss: x %')
         
-        self.ping_avg_latest = wx.StaticText(panel, wx.ID_ANY, 'Last 10 avg: xxx±xx ms')
+        self.ping_avg_latest = wx.StaticText(panel, wx.ID_ANY, 'Last 10 avg: xxxÂ±xx ms')
         self.packet_loss_latest = wx.StaticText(panel, wx.ID_ANY, 'Last 10 loss: x %')
         
         
@@ -56,7 +56,7 @@ class MyForm(wx.Frame):
         host_lbl = wx.StaticText(panel, wx.ID_ANY, 'Se&rver')
         self.host = wx.TextCtrl(panel, wx.ID_ANY,
                                 value = 'ping.sunet.se', size = (200,-1))
-        timeout_lbl = wx.StaticText(panel, wx.ID_ANY, '&Timeout')
+        timeout_lbl = wx.StaticText(panel, wx.ID_ANY, 'Tim&eout')
         self.timeout = FS(panel, wx.ID_ANY, size = (60, -1), value = 200,
                             min_val = 100, max_val = 10000,
                             increment = 10, digits = 0)
@@ -66,7 +66,7 @@ class MyForm(wx.Frame):
                             min_val = 1, max_val = 1000,
                             increment = 1, digits = 0)
         #how many point should show on the graph
-        history_lbl = wx.StaticText(panel, wx.ID_ANY, 'history (s)')
+        history_lbl = wx.StaticText(panel, wx.ID_ANY, '&History (s)')
         self.history = FS(panel, wx.ID_ANY, size = (60, -1), value = 100,
                             min_val = 100, max_val = 10000,
                             increment = 10, digits = 0)
@@ -253,7 +253,7 @@ class MyForm(wx.Frame):
         """
         average = np.nanmean(ping_ms)
         std = np.nanstd(ping_ms)
-        ping_format = '{0:.0f}±{1:.0f} ms'
+        ping_format = '{0:.0f}Â±{1:.0f} ms'
         lbl = 'Ping average: ' + ping_format.format(average, std)
         self.ping_avg.SetLabel(lbl)
         #get stats for the last 10 ping packets
