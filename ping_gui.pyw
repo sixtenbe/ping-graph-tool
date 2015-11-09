@@ -37,15 +37,15 @@ class MyForm(wx.Frame):
         # Add a panel so it looks the correct on all platforms
         panel = wx.Panel(self, wx.ID_ANY)
         self.plot = Graph(panel)
-        self.plot.set_label(xlabel='Time (s)', ylabel='ping [ms]')
+        self.plot.set_label(xlabel=u'Time (s)', ylabel=u'ping [ms]')
         self.plot.set_formatter('plain', useOffset = False)
 
         ###stats###
         self.ping_avg = wx.StaticText(panel, wx.ID_ANY, u'Ping average: xxx±xx ms')
-        self.packet_loss = wx.StaticText(panel, wx.ID_ANY, 'Packet loss: x %')
+        self.packet_loss = wx.StaticText(panel, wx.ID_ANY, u'Packet loss: x %')
         
-        self.ping_avg_latest = wx.StaticText(panel, wx.ID_ANY, 'Last 10 avg: xxx±xx ms')
-        self.packet_loss_latest = wx.StaticText(panel, wx.ID_ANY, 'Last 10 loss: x %')
+        self.ping_avg_latest = wx.StaticText(panel, wx.ID_ANY, u'Last 10 avg: xxx±xx ms')
+        self.packet_loss_latest = wx.StaticText(panel, wx.ID_ANY, u'Last 10 loss: x %')
         
         
         ###settings###
@@ -253,14 +253,14 @@ class MyForm(wx.Frame):
         """
         average = np.nanmean(ping_ms)
         std = np.nanstd(ping_ms)
-        ping_format = '{0:.0f}±{1:.0f} ms'
-        lbl = 'Ping average: ' + ping_format.format(average, std)
+        ping_format = u'{0:.0f}±{1:.0f} ms'
+        lbl = u'Ping average: ' + ping_format.format(average, std)
         self.ping_avg.SetLabel(lbl)
         #get stats for the last 10 ping packets
         ping_latest = ping_ms[-10:]
         average = np.nanmean(ping_latest)
         std = np.nanstd(ping_latest)
-        lbl = 'Ping average: ' + ping_format.format(average, std)
+        lbl = u'Ping average: ' + ping_format.format(average, std)
         self.ping_avg_latest.SetLabel(lbl)
         
     def set_packet_loss_status(self, ping_ms):
@@ -269,7 +269,7 @@ class MyForm(wx.Frame):
         """
         loss_count = int(list(np.isnan(ping_ms)).count(True))
         loss_rate = loss_count / float(len(ping_ms))
-        lbl_format = 'Packet loss: {0:.0f} % ({1:d} packets lost)'
+        lbl_format = u'Packet loss: {0:.0f} % ({1:d} packets lost)'
         lbl = lbl_format.format(loss_rate * 100, loss_count)
         self.packet_loss.SetLabel(lbl)
         
