@@ -76,6 +76,7 @@ class MyForm(wx.Frame):
         #------ Bindings ------#
         self.start_stop.Bind(wx.EVT_BUTTON, self.onStart_Stop)
         self.Bind(wx.EVT_CLOSE, self.onClose)
+        self.Bind(wx.EVT_SIZE, self.onResize)
 
         #------ Layout ------#
         vsizer = wx.BoxSizer(wx.VERTICAL) #main sizer
@@ -158,6 +159,11 @@ class MyForm(wx.Frame):
         #death to everything
         self.Destroy()
 
+    def onResize(self, event):
+        self.plot.figure.tight_layout()
+        event.Skip()
+        
+        
     def onStart_Stop(self, event):
         """
         Starts or stops the pinging of the server
