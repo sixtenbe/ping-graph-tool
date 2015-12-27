@@ -81,6 +81,7 @@ class _plot_data():
         Keyword arguments:
         """
         # recreate all the settings, as a new axes object has been set
+        self.axes.grid(self.parent.grid, color=self.parent.grid_color)
         self.axes.grid(self.parent.grid)
         self.axes.set_title(self.title)
         self.axes.set_xlabel(self.parent.x_label)
@@ -149,6 +150,8 @@ class _plot_list():
     y2_label -- (default: '')
     """
     grid = True
+    color = 'white'
+    grid_color = 'black'
     has_selection = False
     secondary_y_axis = False
     y2_label = ''
@@ -284,7 +287,22 @@ class _plot_list():
         
         #Set grid variable
         for sub_plot in self.sub_plots:
-            sub_plot.axes.grid(show)
+            sub_plot.axes.grid(b=show, color=self.grid_color)
+            sub_plot.axes.grid(b=show)
+            
+    def set_axis_bgcolor(self, color):
+        self.color = color
+        if color.lower()=='black':
+            self.grid_color = 'white'
+        else:
+            self.grid_color = 'black'
+                
+                
+        for sub_plot in self.sub_plots:
+            sub_plot.axes.set_axis_bgcolor(color)
+            
+            sub_plot.axes.grid(self.grid, color=self.grid_color)
+            sub_plot.axes.grid(self.grid)
         
     
 class Graph(wx.BoxSizer):

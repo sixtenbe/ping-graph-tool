@@ -39,6 +39,8 @@ class MyForm(wx.Frame):
         self.plot = Graph(panel)
         self.plot.set_label(xlabel=u'Time (s)', ylabel=u'ping [ms]')
         self.plot.set_formatter('plain', useOffset = False)
+        #black background
+        self.plot.sub_plots.set_axis_bgcolor('black')
 
         ###stats###
         self.ping_avg = wx.StaticText(panel, wx.ID_ANY, u'Ping average: xxx±xx ms')
@@ -200,7 +202,7 @@ class MyForm(wx.Frame):
             self.plot.set_limits(plot_lim)
             line_limit = self.plot.redraw(x_limit, y_limit, color='r',
                                 draw=False)[0]
-            line_ping = self.plot.redraw(*([0,0],)*2, draw=False, color='b',
+            line_ping = self.plot.redraw(*([0,0],)*2, draw=False, color='dodgerblue',
                                         hold=True, marker='x')[0]
             line_timeout = self.plot.redraw(*([0,0],)*2, draw=False, color='r',
                                         hold=True, marker='', linestyle='--')[0]
