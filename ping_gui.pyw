@@ -189,21 +189,19 @@ class MyForm(wx.Frame):
         d.Destroy()
 
 
-    def ping_it(self):
+    def ping_it(self, hist_max, host, timeout, init_limit):
         """
         will perform the pinging and plot to the graph
         """
         #reset the ping data
-        self.ping_ms = []   #y-axis
-        self.ping_date = [] #x-axis
-        #the data length to use when calling the fill_axis function
-        hist_max = self.history.GetMax()
+        new_ping_ms = []   #y-axis
+        ping_date = [] #x-axis
         
-        with ping(self.host.GetValue(), self.timeout.GetValue()) as pinger:
+        with ping(host, timeout) as pinger:
             x_limit = [-100, 0]
             #intialize the first line
-            y_limit = [self.limit.GetValue()]*2
-            plot_lim = axis_limit(x_limit, self.limit.GetValue(), [0])
+            y_limit = [init_limit]*2
+            plot_lim = axis_limit(x_limit, init_limit, [0])
             #set initial limits
             self.plot.set_limits(plot_lim)
             line_limit = self.plot.redraw(x_limit, y_limit, color='r',
@@ -212,27 +210,28 @@ class MyForm(wx.Frame):
                                         hold=True, marker='x')[0]
             line_timeout = self.plot.redraw(*([0,0],)*2, draw=False, color='r',
                                         hold=True, marker='', linestyle='--')[0]
-            self.plot.set_limits(plot_lim)
+            wx.CallAfter(self.plot.set_limits, plot_lim)
 
             while not self.stoprequest.isSet():
-                ping_ms, ping_date = pinger.next()
+                new_ping_ms, new_ping_date = pinger.next()
                 hist_len = int(self.history.GetValue())
                 #trim lists using the maximum length
-                self.ping_ms = fill_axis(self.ping_ms, ping_ms, hist_max)
-                self.ping_date = fill_axis(self.ping_date, ping_date, hist_max)
+                ping_ms = fill_axis(ping_ms, new_ping_ms, hist_max)
+                ping_date = fill_axis(ping_date, new_ping_date, hist_max)
                 #create truncated lists for temp usage
-                trunc_ping_ms =          self.ping_ms[-hist_len:]
-                trunc_ping_date = self.ping_date[-hist_len:]
+                trunc_ping_ms = ping_ms[-hist_len:]
+                trunc_ping_date = ping_date[-hist_len:]
                 
                 #convert ping time to relative time from current time
                 was_pinged = get_time_diff(trunc_ping_date, time())
                
                 #genereate plot limits
                 x_limit = [-hist_len, 0]
-                plot_lim_new = axis_limit(x_limit, self.limit.GetValue(), trunc_ping_ms)
+                limit_value = self.limit.GetValue()
+                plot_lim_new = axis_limit(x_limit, limit_value, trunc_ping_ms)
 
                 #update the y_limit line
-                y_limit = [self.limit.GetValue()]*2
+                y_limit = [limit_value]*2
 
                 #efficient plotting
                 line_limit.set_data(x_limit, y_limit)
@@ -241,17 +240,17 @@ class MyForm(wx.Frame):
                 #only redo the plot limits and grid if needed
                 if not plot_lim == plot_lim_new:
                     plot_lim = plot_lim_new
-                    self.plot.set_limits(plot_lim)
+                    wx.CallAfter(self.plot.set_limits, plot_lim)
                 else:
-                    self.plot.update_plot_only([line_limit, line_ping,
-                                                line_timeout])
+                    wx.CallAfter(self.plot.update_plot_only,
+                                [line_limit, line_ping, line_timeout])
                 #update status texts
                 self.set_packet_loss_status(trunc_ping_ms)
                 self.set_ping_avg_status(trunc_ping_ms)
                 #explicit wait instead of implicit from the generator
                 sleep(0.2)
             #cleanup remove the line objects
-            self.plot.clear_lines()
+            wx.CallAfter(self.plot.clear_lines)
             #self.plot.sub_plots().axes.lines.remove(line)
 
 
@@ -263,13 +262,13 @@ class MyForm(wx.Frame):
         std = np.nanstd(ping_ms)
         ping_format = u'{0:.0f}±{1:.0f} ms'
         lbl = u'Ping average: ' + ping_format.format(average, std)
-        self.ping_avg.SetLabel(lbl)
+        wx.CallAfter(self.ping_avg.SetLabel, lbl)
         #get stats for the last 10 ping packets
         ping_latest = ping_ms[-10:]
         average = np.nanmean(ping_latest)
         std = np.nanstd(ping_latest)
         lbl = u'Ping average: ' + ping_format.format(average, std)
-        self.ping_avg_latest.SetLabel(lbl)
+        wx.CallAfter(self.ping_avg_latest.SetLabel, lbl)
         
     def set_packet_loss_status(self, ping_ms):
         """
@@ -279,19 +278,23 @@ class MyForm(wx.Frame):
         loss_rate = loss_count / float(len(ping_ms))
         lbl_format = u'Packet loss: {0:.0f} % ({1:d} packets lost)'
         lbl = lbl_format.format(loss_rate * 100, loss_count)
-        self.packet_loss.SetLabel(lbl)
+        wx.CallAfter(self.packet_loss.SetLabel, lbl)
         
         #get stats for the last 10 ping packets
         ping_latest = ping_ms[-10:]
         loss_count = int(list(np.isnan(ping_latest)).count(True))
         loss_rate = loss_count / float(len(ping_latest))
         lbl = lbl_format.format(loss_rate * 100, loss_count)
-        self.packet_loss_latest.SetLabel(lbl)
+        wx.CallAfter(self.packet_loss_latest.SetLabel, lbl)
         
     
     def start_ping(self):
         self.stoprequest.clear()
-        thread = Thread(target=self.ping_it)
+        keyargs = {'hist_max': self.history.GetMax(),
+                    'host': self.host.GetValue(),
+                    'timeout': self.timeout.GetValue(),
+                    'init_limit': self.limit.GetValue()}
+        thread = Thread(target=self.ping_it, kwargs=keyargs)
         thread.setDaemon(True)
         thread.start()
         self.start_stop.SetLabel("&Stop")
