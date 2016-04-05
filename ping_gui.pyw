@@ -30,9 +30,6 @@ class MyForm(wx.Frame):
         sys.excepthook = self.excepthook
         #used to start stop the ping operation
         self.stoprequest = Event()
-        #variables with ping data for graph
-        self.ping_ms = []   #y-axis
-        self.ping_date = [] #x-axis
 
         # Add a panel so it looks the correct on all platforms
         panel = wx.Panel(self, wx.ID_ANY)
@@ -194,7 +191,7 @@ class MyForm(wx.Frame):
         will perform the pinging and plot to the graph
         """
         #reset the ping data
-        new_ping_ms = []   #y-axis
+        ping_ms = []   #y-axis
         ping_date = [] #x-axis
         
         with ping(host, timeout) as pinger:
