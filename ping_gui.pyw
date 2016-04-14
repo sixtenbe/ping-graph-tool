@@ -18,8 +18,12 @@ from threading import Thread, Event
 import re
 import wx
 from wx.lib.agw.floatspin import FloatSpin as FS, EVT_FLOATSPIN
+import wx.lib.newevent as NE
 
 from wxplot import Graph
+
+
+PingEvent, EVT_Ping = NE.NewEvent()
 
 class MyForm(wx.Frame):
 
@@ -74,6 +78,7 @@ class MyForm(wx.Frame):
         self.start_stop.Bind(wx.EVT_BUTTON, self.onStart_Stop)
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Bind(wx.EVT_SIZE, self.onResize)
+        self.Bind(EVT_Ping, self.onPlotting)
 
         #------ Layout ------#
         vsizer = wx.BoxSizer(wx.VERTICAL) #main sizer
@@ -186,7 +191,7 @@ class MyForm(wx.Frame):
         d.Destroy()
 
 
-    def ping_it(self, hist_max, host, timeout, init_limit):
+    def ping_it(self, hist_max, host, timeout):
         """
         will perform the pinging and plot to the graph
         """
@@ -195,62 +200,82 @@ class MyForm(wx.Frame):
         ping_date = [] #x-axis
         
         with ping(host, timeout) as pinger:
-            x_limit = [-100, 0]
-            #intialize the first line
-            y_limit = [init_limit]*2
-            plot_lim = axis_limit(x_limit, init_limit, [0])
-            #set initial limits
-            self.plot.set_limits(plot_lim)
-            line_limit = self.plot.redraw(x_limit, y_limit, color='r',
-                                draw=False)[0]
-            line_ping = self.plot.redraw(*([0,0],)*2, draw=False, color='dodgerblue',
-                                        hold=True, marker='x')[0]
-            line_timeout = self.plot.redraw(*([0,0],)*2, draw=False, color='r',
-                                        hold=True, marker='', linestyle='--')[0]
-            wx.CallAfter(self.plot.set_limits, plot_lim)
-
             while not self.stoprequest.isSet():
                 new_ping_ms, new_ping_date = pinger.next()
-                hist_len = int(self.history.GetValue())
                 #trim lists using the maximum length
                 ping_ms = fill_axis(ping_ms, new_ping_ms, hist_max)
                 ping_date = fill_axis(ping_date, new_ping_date, hist_max)
-                #create truncated lists for temp usage
-                trunc_ping_ms = ping_ms[-hist_len:]
-                trunc_ping_date = ping_date[-hist_len:]
                 
-                #convert ping time to relative time from current time
-                was_pinged = get_time_diff(trunc_ping_date, time())
-               
-                #genereate plot limits
-                x_limit = [-hist_len, 0]
-                limit_value = self.limit.GetValue()
-                plot_lim_new = axis_limit(x_limit, limit_value, trunc_ping_ms)
-
-                #update the y_limit line
-                y_limit = [limit_value]*2
-
-                #efficient plotting
-                line_limit.set_data(x_limit, y_limit)
-                line_ping.set_data(was_pinged, trunc_ping_ms)
-                line_timeout.set_data(*nan_line_creator(was_pinged, trunc_ping_ms))
-                #only redo the plot limits and grid if needed
-                if not plot_lim == plot_lim_new:
-                    plot_lim = plot_lim_new
-                    wx.CallAfter(self.plot.set_limits, plot_lim)
-                else:
-                    wx.CallAfter(self.plot.update_plot_only,
-                                [line_limit, line_ping, line_timeout])
-                #update status texts
-                self.set_packet_loss_status(trunc_ping_ms)
-                self.set_ping_avg_status(trunc_ping_ms)
+                wx.PostEvent(self, PingEvent(ping_ms=ping_ms, 
+                            ping_date=ping_date))
                 #explicit wait instead of implicit from the generator
-                sleep(0.2)
+                sleep(0.3)
             #cleanup remove the line objects
             wx.CallAfter(self.plot.clear_lines)
             #self.plot.sub_plots().axes.lines.remove(line)
+    
+    
+    def onPlotting(self, event):
+        """
+        """
+        hist_len = int(self.history.GetValue())
+        trunc_ping_ms = event.ping_ms[-hist_len:]
+        trunc_ping_date = event.ping_date[-hist_len:]
+        
+        #convert ping time to relative time from current time
+        was_pinged = get_time_diff(trunc_ping_date, time())
+       
+        #generate plot limits
+        x_limit = [-hist_len, 0]
+        limit_value = self.limit.GetValue()
+        plot_lim_new = axis_limit(x_limit, limit_value, trunc_ping_ms)
 
-
+        #update the y_limit line
+        y_limit = [limit_value]*2
+        
+        #efficient plotting
+        self.line_limit.set_data(x_limit, y_limit)
+        self.line_ping.set_data(was_pinged, trunc_ping_ms)
+        self.line_timeout.set_data(*nan_line_creator(was_pinged, trunc_ping_ms))
+        #only redo the plot limits and grid if needed
+        if not self.plot_lim == plot_lim_new:
+            self.plot_lim = plot_lim_new
+            self.plot.set_limits(self.plot_lim)
+        else:
+            self.plot.update_plot_only([self.line_limit,
+                    self.line_ping, self.line_timeout]
+                    )
+        #update status texts
+        self.set_packet_loss_status(trunc_ping_ms)
+        self.set_ping_avg_status(trunc_ping_ms)
+        
+        
+    def plotting_init(self):
+        """
+        Initializes the plot and saves the lines so that the plot can be
+        manipulated efficiently...
+        """
+        #clear out any previous data
+        self.plot.clear_lines()
+        #initialize data for the first line
+        init_limit = self.limit.GetValue()
+        x_limit = [-100, 0]
+        y_limit = [init_limit]*2
+        self.plot_lim = axis_limit(x_limit, init_limit, [0])
+        
+        
+        self.plot.set_limits(self.plot_lim)
+        self.line_limit = self.plot.redraw(x_limit, y_limit, 
+                                color='r', draw=False)[0]
+        self.line_ping = self.plot.redraw(*([0,0],)*2,
+                                draw=False, color='dodgerblue',
+                                hold=True, marker='x')[0]
+        self.line_timeout = self.plot.redraw(*([0,0],)*2,
+                                draw=False, color='r',
+                                hold=True, marker='', linestyle='--')[0]
+        self.plot.set_limits(self.plot_lim)
+        
+        
     def set_ping_avg_status(self, ping_ms):
         """
         Updates the average ping text
@@ -260,6 +285,7 @@ class MyForm(wx.Frame):
         ping_format = u'{0:.0f}±{1:.0f} ms'
         lbl = u'Ping average: ' + ping_format.format(average, std)
         wx.CallAfter(self.ping_avg.SetLabel, lbl)
+        
         #get stats for the last 10 ping packets
         ping_latest = ping_ms[-10:]
         average = np.nanmean(ping_latest)
@@ -287,10 +313,16 @@ class MyForm(wx.Frame):
     
     def start_ping(self):
         self.stoprequest.clear()
-        keyargs = {'hist_max': self.history.GetMax(),
+        #initialize plot variables with a function
+        #then change so that ping_it doesn't do any UI manipulation and instead
+        #creates a event that does all the UI stuff but all the main data
+        #manipulation is in ping_it
+        self.plotting_init()
+        
+        keyargs = { 'hist_max': self.history.GetMax(),
                     'host': self.host.GetValue(),
-                    'timeout': self.timeout.GetValue(),
-                    'init_limit': self.limit.GetValue()}
+                    'timeout': self.timeout.GetValue()
+                    }
         thread = Thread(target=self.ping_it, kwargs=keyargs)
         thread.setDaemon(True)
         thread.start()
@@ -326,7 +358,8 @@ def get_time_diff(time_list, ref_time):
     ref_time -- The reference date to subtract from the time_list
     """
 
-    return [element - ref_time for element in time_list]
+    #return [element - ref_time for element in time_list]
+    return np.subtract(time_list, ref_time)
 
 
 def fill_axis(axis, value, length=100):
