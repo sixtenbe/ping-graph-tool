@@ -2,11 +2,10 @@ import wx
 import matplotlib
 matplotlib.use('WXAgg')
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from matplotlib.backends.backend_wx import NavigationToolbar2Wx
+from matplotlib.backends.backend_wxagg import NavigationToolbar2Wx
 from matplotlib.figure import Figure
 from matplotlib.ticker import ScalarFormatter, LogFormatter
 from os import path, remove
-
 
 class _plot_data():
     """
@@ -291,7 +290,7 @@ class _plot_list():
             sub_plot.axes.grid(b=show)
             
     def set_axis_bgcolor(self, color):
-        self.color = color
+        self.color = color.lower()
         if color.lower()=='black':
             self.grid_color = 'white'
         else:
@@ -356,7 +355,7 @@ class Graph(wx.BoxSizer):
         toolbar_sizer.Add(btn_mark, 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 20)
         self.toolbar.SetSizer(toolbar_sizer)
         #needed to update the layout
-        self.toolbar.Layout()
+        self.toolbar.Realize()
 
         
         #######Main layout#######
@@ -395,6 +394,9 @@ class Graph(wx.BoxSizer):
         Draws or removes a selection outline on current sub-plot selection
         """
         #TODO#
+        mark_color = 'k'
+        if self.sub_plots.color.lower() == 'black':
+            mark_color = 'white'
         if self.sub_plots.has_selection:
             #delete markers
             for sub_plot in self.sub_plots.sub_plots:
@@ -409,7 +411,7 @@ class Graph(wx.BoxSizer):
                 sub_plot.selection = self.redraw(x,y, hold = True,
                                         limits = (x1,x2,y1,y2),
                                         index = i,
-                                        color = 'k', linewidth = 2.0)
+                                        color = mark_color, linewidth = 2.0)
         self.sub_plots.has_selection = not self.sub_plots.has_selection
     
     ############Worker functions############
