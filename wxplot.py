@@ -1,3 +1,5 @@
+#!/usr/bin/python2
+# -*- coding: UTF-8 -*-
 import wx
 import matplotlib
 matplotlib.use('WXAgg')
@@ -344,16 +346,17 @@ class Graph(wx.BoxSizer):
         self.cb_grid = wx.CheckBox(self.toolbar, wx.NewId(), 'Show Grid')
         btn_mark = wx.Button(self.toolbar, wx.NewId(), 'Mark selection')
         #btn_rem = wx.Button(parent, wx.NewId(), 'Remove_graph')
+        self.cursor_pos = wx.StaticText(self.toolbar, wx.NewId(), 
+            'x=0.0000, y=0.0000            ',
+            style=wx.ALIGN_RIGHT | wx.ST_ELLIPSIZE_END | wx.ST_NO_AUTORESIZE)
         
         ####add extra controls to toolbar####
         self.toolbar.AddControl(self.cb_grid)
         self.toolbar.AddControl(btn_mark)
-        ####create and set toolbar sizer####
-        toolbar_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        toolbar_sizer.Add(self.toolbar, 0, wx.ALIGN_LEFT)
-        toolbar_sizer.Add(self.cb_grid, 0, wx.LEFT | wx.ALIGN_CENTER,30)
-        toolbar_sizer.Add(btn_mark, 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 20)
-        self.toolbar.SetSizer(toolbar_sizer)
+        self.toolbar.AddStretchableSpace()
+        self.toolbar.AddControl(self.cursor_pos)
+        #self.toolbar.AddStretchableSpace()
+        
         #needed to update the layout
         self.toolbar.Realize()
 
@@ -379,6 +382,8 @@ class Graph(wx.BoxSizer):
         btn_mark.Connect(-1, -1, wx.wxEVT_COMMAND_BUTTON_CLICKED, self._on_mark)
         #btn_rem.Connect(-1, -1, wx.wxEVT_COMMAND_BUTTON_CLICKED, self.on_rem)
         
+        self.canvas.mpl_connect('motion_notify_event', self._UpdateCursorInformation)
+        
     
     ############Event handlers############
     def _on_cb_grid(self, evt):
@@ -393,7 +398,6 @@ class Graph(wx.BoxSizer):
         """
         Draws or removes a selection outline on current sub-plot selection
         """
-        #TODO#
         mark_color = 'k'
         if self.sub_plots.color.lower() == 'black':
             mark_color = 'white'
@@ -413,6 +417,13 @@ class Graph(wx.BoxSizer):
                                         index = i,
                                         color = mark_color, linewidth = 2.0)
         self.sub_plots.has_selection = not self.sub_plots.has_selection
+        
+        
+    def _UpdateCursorInformation(self, evt):
+        if evt.inaxes:
+            x, y = evt.xdata, evt.ydata
+            txt = 'x={0:.4g}, y={1:.4g}'.format(x, y)
+            self.cursor_pos.SetLabel(txt)
     
     ############Worker functions############
     def add_secondary_y_axis(self, label = '', index = None):

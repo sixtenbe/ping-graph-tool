@@ -533,7 +533,7 @@ group_id=5470).
 if __name__ == "__main__":
     installThreadExcepthook()
 
-    app = wx.PySimpleApp()
+    app = wx.App()
     frame = MyForm()
     app.MainLoop()
 
