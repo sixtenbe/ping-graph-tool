@@ -187,6 +187,9 @@ class MyForm(wx.Frame):
 
         d = wx.MessageDialog(self, "{0}: {1}".format(etype.__name__, value),
                             "Unhandled exception", wx.OK | wx.ICON_ERROR)
+        
+        if etype is wx.PyAssertionError:
+            self.stop_ping()
         d.ShowModal()
         d.Destroy()
 

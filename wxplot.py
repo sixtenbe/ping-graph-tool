@@ -819,5 +819,6 @@ class Graph(wx.BoxSizer):
             ax.draw_artist(line)
         #redraw display selectively
         self.canvas.blit(ax.bbox)
-        self.canvas.flush_events()
+        #should flush_events be used a bunch of erros seem to occur on this?
+        #self.canvas.flush_events()
         
